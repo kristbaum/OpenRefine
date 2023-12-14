@@ -1,6 +1,6 @@
 name: openrefine
 base: core22
-version: "3.7.6"
+version: "3.7.7"
 summary: A free, open source, powerful tool for working with messy data
 description: |
   OpenRefine (previously Google Refine) is a powerful tool for working with messy data:
@@ -26,7 +26,6 @@ parts:
       - curl
       - openjdk-17-jre-headless
       - jython
-      #      - libapache-jena-java
       - libapache-poi-java
       - libclojure-java
       - libcommons-codec-java
@@ -39,12 +38,8 @@ parts:
       - libcommons-lang3-java
       - libcommons-text-java
       - libcommons-validator-java
-      #      - libgoogle-api-services-drive-java
-      #      - libgoogle-api-services-sheets-java
-      #      - libgoogle-http-client-java
       - libguava-java
       - libhttpclient-java
-      #      - libhttpclient5-java
       - libhttpcore-java
       - libjackson2-annotations-java
       - libjackson2-core-java
@@ -56,31 +51,18 @@ parts:
       - libjsoup-java
       - libjsr305-java
       - libjuniversalchardet-java
-      #      - liblessen-java
       - liblog4j2-java
-      #      - libmarc4j-java
       - libmariadb-java
       - liboauth-signpost-java
-      #      - libodfdom-java
-      #      - libopenrefine-butterfly-java
-      #      - libopenrefine-opencsv-java
-      #      - libopenrefine-vicino-java
-      #      - libowasp-encoder-java
       - libpostgresql-jdbc-java
       - librhino-java
       - libservlet-api-java
       - libslf4j-java
-      #      - libsweble-common-java
-      #      - libsweble-wikitext-java
       - libtomcat9-java
-      #      - libwikidata-toolkit-java
-      #      - libxerial-sqlite-jdbc-java
       - procps
       - velocity
     prime:
-      #      - -usr/lib/jvm/java-*/lib/security/cacerts
       - -usr/lib/jvm/java-*/lib/security/blacklisted.certs
-      #      - -usr/lib/jvm/java-*/jre/lib/security/cacerts
 
 apps:
   openrefine:
