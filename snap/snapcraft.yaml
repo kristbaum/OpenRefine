@@ -15,6 +15,10 @@ icon: snap/gui/openrefine.png
 architectures:
   - build-on: amd64
 
+layout:
+  $SNAP_USER_COMMON/.local/share/openrefine:
+    bind: $SNAP_USER_DATA/.local/share/openrefine
+
 parts:
   openrefine:
     plugin: dump
