@@ -7,6 +7,11 @@ description: |
   cleaning it; transforming it from one format into another; and extending it with web services and external data.
   OpenRefine always keeps your data private on your own computer until you want to share or collaborate. Your private data never leaves your computer unless you want it to. (It works by running a small server on your computer and you use your web browser to interact with it)
 
+platforms:
+  amd64:
+  arm64:
+    build-on: [amd64, arm64]
+    build-for: [arm64]
 grade: stable
 confinement: strict
 compression: lzo
