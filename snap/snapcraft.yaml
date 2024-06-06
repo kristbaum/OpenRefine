@@ -12,8 +12,8 @@ confinement: strict
 compression: lzo
 icon: snap/gui/openrefine.png
 
-architectures:
-  - build-on: amd64
+platforms:
+  - amd64
 
 parts:
   openrefine:
