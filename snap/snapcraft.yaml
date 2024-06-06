@@ -12,9 +12,6 @@ confinement: strict
 compression: lzo
 icon: snap/gui/openrefine.png
 
-platforms:
-  - amd64
-
 parts:
   openrefine:
     plugin: dump
