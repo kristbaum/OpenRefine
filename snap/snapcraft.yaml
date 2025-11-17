@@ -30,20 +30,20 @@ parts:
     plugin: dump
     source-type: tar
     source: https://github.com/OpenRefine/OpenRefine/releases/download/$SNAPCRAFT_PROJECT_VERSION/openrefine-linux-$SNAPCRAFT_PROJECT_VERSION.tar.gz
-    #   build-packages:
-    #     - ca-certificates-java
+    build-packages:
+      - ca-certificates-java
     stage-packages:
       - curl
       - openjdk-21-jre-headless
       - procps
-#    prime:
-#      - -usr/lib/jvm/java-*/lib/security/blacklisted.certs
+    prime:
+     - -usr/lib/jvm/java-*/lib/security/blacklisted.certs
 
 apps:
   openrefine:
     command: ./refine
     environment:
-      # Ensure OpenRefine writes to snap's allowed user area
+      # Ensure OpenRefine writes to snaps allowed user area
       HOME: ${SNAP_USER_COMMON}
       XDG_DATA_HOME: ${SNAP_USER_COMMON}/.local/share
       XDG_CONFIG_HOME: ${SNAP_USER_COMMON}/.config
