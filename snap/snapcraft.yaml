@@ -37,7 +37,7 @@ parts:
       - openjdk-21-jre-headless
       - procps
     prime:
-     - -usr/lib/jvm/java-*/lib/security/blacklisted.certs
+     - -usr/lib/jvm/java-*/lib/security/cacerts
 
 apps:
   openrefine:
