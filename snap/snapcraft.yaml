@@ -36,8 +36,15 @@ parts:
       - curl
       - openjdk-21-jre-headless
       - procps
-    prime:
-     - -usr/lib/jvm/java-*/lib/security/cacerts
+      - ca-certificates-java
+
+layout:
+  /usr/lib/jvm/java-21-openjdk-amd64/lib/security/cacerts:
+    symlink: $SNAP/usr/lib/jvm/java-21-openjdk-amd64/lib/security/cacerts
+  /etc/ssl/certs:
+    bind: $SNAP/etc/ssl/certs
+  /etc/ca-certificates:
+    bind: $SNAP/etc/ca-certificates
 
 apps:
   openrefine:
