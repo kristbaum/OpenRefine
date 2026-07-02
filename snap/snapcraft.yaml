@@ -1,7 +1,7 @@
 name: openrefine
 title: OpenRefine
-base: core24
-version: "3.9.5"
+base: core26
+version: "3.10.1"
 summary: A free, open source, powerful tool for working with messy data
 description: |
   OpenRefine is a powerful tool for working with messy data:
@@ -31,12 +31,30 @@ parts:
     source-type: tar
     source: https://github.com/OpenRefine/OpenRefine/releases/download/$SNAPCRAFT_PROJECT_VERSION/openrefine-linux-$SNAPCRAFT_PROJECT_VERSION.tar.gz
     build-packages:
+      # openjdk JRE is required at build time so ca-certificates-java's postinst
+      # can actually generate the JKS truststore (/etc/ssl/certs/java/cacerts).
+      # Without a runnable JRE the keystore is silently never created.
+      - ca-certificates
       - ca-certificates-java
+      - openjdk-21-jre-headless
     stage-packages:
       - curl
       - openjdk-21-jre-headless
       - procps
       - ca-certificates-java
+    override-build: |
+      craftctl default
+      # Stage-package postinst hooks don't run during snap staging, so the
+      # CA cert tree (and the JVM's JKS truststore) is never generated -> Java
+      # fails TLS with "trustAnchors parameter must be non-empty". The
+      # ca-certificates* build-packages DID generate a populated /etc/ssl/certs
+      # in the build environment; copy it in (dereferencing symlinks so the snap
+      # is self-contained and doesn't depend on /usr/share/ca-certificates).
+      mkdir -p "${CRAFT_PART_INSTALL}/etc/ssl/certs"
+      cp -aL /etc/ssl/certs/. "${CRAFT_PART_INSTALL}/etc/ssl/certs/"
+      # Fail the build (instead of shipping a broken snap) if the JVM truststore
+      # didn't get generated/copied.
+      test -s "${CRAFT_PART_INSTALL}/etc/ssl/certs/java/cacerts"
 
 layout:
   /usr/lib/jvm/java-21-openjdk-amd64/lib/security/cacerts:
