@@ -42,6 +42,8 @@ parts:
       - openjdk-21-jre-headless
       - procps
       - ca-certificates-java
+      # gdbus, used by the refine-launch wrapper to open the UI via the desktop portal
+      - libglib2.0-bin
     override-build: |
       craftctl default
       # Stage-package postinst hooks don't run during snap staging, so the
@@ -56,6 +58,53 @@ parts:
       # didn't get generated/copied.
       test -s "${CRAFT_PART_INSTALL}/etc/ssl/certs/java/cacerts"
 
+      # OpenRefine's own browser launch is bolted onto an AWT/Swing JFrame
+      # (RefineClient), which can't work in this strictly-confined, headless-JRE
+      # snap. Instead we run OpenRefine headless (server only, no JFrame) and open
+      # the UI ourselves via the XDG desktop portal (allowed by the 'desktop'
+      # interface). This wrapper is the snap's command.
+      cat > "${CRAFT_PART_INSTALL}/refine-launch" <<'LAUNCH'
+      #!/bin/sh
+      # Resolve the URL the server will listen on, mirroring refine's defaults
+      # (and honouring refine.ini, which is sourced shell-style by refine too).
+      [ -f "$SNAP/refine.ini" ] && . "$SNAP/refine.ini" 2>/dev/null
+      PORT="${REFINE_PORT:-3333}"
+      HOST="${REFINE_INTERFACE:-127.0.0.1}"
+      URL="http://${HOST}:${PORT}/"
+
+      open_ui() {
+          # Wait (up to ~90s) for the server to start accepting connections.
+          i=0
+          while [ "$i" -lt 90 ]; do
+              curl --noproxy '*' -s -o /dev/null "$URL" && break
+              i=$((i + 1))
+              sleep 1
+          done
+          # Ask the host to open the URL in the user's real browser. Try the XDG
+          # desktop portal first (granted by the 'desktop' interface), then fall
+          # back to snapd's own URL launcher. Both no-op harmlessly when there is
+          # no desktop session (e.g. over SSH).
+          gdbus call --session \
+              --dest org.freedesktop.portal.Desktop \
+              --object-path /org/freedesktop/portal/desktop \
+              --method org.freedesktop.portal.OpenURI.OpenURI \
+              "" "$URL" {} >/dev/null 2>&1 && return
+          gdbus call --session \
+              --dest io.snapcraft.Launcher \
+              --object-path /io/snapcraft/Launcher \
+              --method io.snapcraft.Launcher.OpenURL \
+              "$URL" >/dev/null 2>&1
+      }
+
+      echo "OpenRefine will be available at $URL"
+      open_ui &
+
+      # refine.headless=true (set via JAVA_TOOL_OPTIONS) makes OpenRefine skip its
+      # own AWT browser launch and run server-only. Forward all user arguments.
+      exec "$SNAP/refine" "$@"
+      LAUNCH
+      chmod +x "${CRAFT_PART_INSTALL}/refine-launch"
+
 layout:
   /usr/lib/jvm/java-21-openjdk-amd64/lib/security/cacerts:
     symlink: $SNAP/usr/lib/jvm/java-21-openjdk-amd64/lib/security/cacerts
@@ -66,7 +115,7 @@ layout:
 
 apps:
   openrefine:
-    command: ./refine
+    command: refine-launch
     environment:
       # Ensure OpenRefine writes to snaps allowed user area
       HOME: ${SNAP_USER_COMMON}
@@ -75,8 +124,11 @@ apps:
       # Java settings and PATH
       JAVA_HOME: $SNAP/usr/lib/jvm/java-21-openjdk-amd64
       PATH: $JAVA_HOME/bin:$PATH
-      JAVA_TOOL_OPTIONS: -Duser.home="${SNAP_USER_COMMON}" -Djava.awt.headless=true
-      _JAVA_OPTIONS: -Duser.home="${SNAP_USER_COMMON}" -Djava.awt.headless=true
+      # refine.headless=true: run server-only so OpenRefine doesn't try to launch
+      # a browser via AWT/Swing (impossible in this confined, headless-JRE snap);
+      # the refine-launch wrapper opens the UI via the desktop portal instead.
+      JAVA_TOOL_OPTIONS: -Duser.home="${SNAP_USER_COMMON}" -Djava.awt.headless=true -Drefine.headless=true
+      _JAVA_OPTIONS: -Duser.home="${SNAP_USER_COMMON}" -Djava.awt.headless=true -Drefine.headless=true
     plugs:
       - network
       - network-bind
